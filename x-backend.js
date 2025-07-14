@@ -28,6 +28,11 @@ function calculateAgeDays(createdAt) {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
+// Root endpoint
+app.get('/', (req, res) => {
+  res.send('X Account Age Checker API is running');
+});
+
 // X age checker endpoint
 app.post('/api/x/:username', async (req, res) => {
   try {
@@ -74,6 +79,11 @@ app.post('/api/x/:username', async (req, res) => {
       error: error.message || 'Failed to fetch X data',
     });
   }
+});
+
+// Health check endpoint
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 });
 
 app.listen(PORT, () => {
