@@ -9,10 +9,29 @@ app.use(express.json());
 
 const PORT = process.env.PORT || 3000;
 
+// Calculate account age in human-readable format
+function calculateAccountAge(createdAt) {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffMs = now - created;
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const years = Math.floor(diffDays / 365);
+  const months = Math.floor((diffDays % 365) / 30);
+  return years > 0 ? `${years} years, ${months} months` : `${months} months`;
+}
+
+// Calculate age in days
+function calculateAgeDays(createdAt) {
+  const now = new Date();
+  const created = new Date(createdAt);
+  const diffMs = now - created;
+  return Math.floor(diffMs / (1000 * 60 * 60 * 24));
+}
+
 // X age checker endpoint
 app.post('/api/x/:username', async (req, res) => {
   try {
-    // Verify reCAPTCHA (assuming same setup as TikTok checker)
+    // Verify reCAPTCHA
     const recaptchaResponse = req.body.recaptcha;
     if (!recaptchaResponse) {
       return res.status(400).json({ error: 'reCAPTCHA required' });
@@ -35,11 +54,20 @@ app.post('/api/x/:username', async (req, res) => {
     });
     const user = response.data.data;
     if (!user) throw new Error('User not found');
+
     res.json({
       username: user.username,
-      created_at: user.created_at,
+      nickname: user.name,
+      estimated_creation_date: new Date(user.created_at).toLocaleDateString(),
+      account_age: calculateAccountAge(user.created_at),
+      age_days: calculateAgeDays(user.created_at),
       followers: user.public_metrics.followers_count,
-      bio: user.description || 'N/A',
+      total_likes: user.public_metrics.like_count,
+      verified: user.verified ? 'Yes' : 'No',
+      description: user.description || 'N/A',
+      region: user.location || 'N/A',
+      user_id: user.id,
+      avatar: user.profile_image_url || 'https://via.placeholder.com/50',
     });
   } catch (error) {
     res.status(error.response?.status || 500).json({
