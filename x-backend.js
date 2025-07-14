@@ -53,7 +53,7 @@ app.post('/api/x/:username', async (req, res) => {
     }
 
     const response = await axios.get(
-      `https://api.x.com/2/users/by/username/${req.params.username}?user.fields=public_metrics,created_at,profile_image_url,location,description,verified`,
+      `https://api.x.com/2/users/by/username/${req.params.username}?user.fields=public_metrics,created_at,profile_image_url,location,description,verified,verified_type`,
       {
         headers: {
           Authorization: `Bearer ${process.env.X_BEARER_TOKEN}`,
@@ -62,6 +62,8 @@ app.post('/api/x/:username', async (req, res) => {
     );
     const user = response.data.data;
     if (!user) throw new Error('User not found');
+
+    console.log('X API Response:', JSON.stringify(response.data, null, 2)); // Log raw response for debugging
 
     res.json({
       username: user.username || req.params.username,
@@ -72,6 +74,7 @@ app.post('/api/x/:username', async (req, res) => {
       followers: user.public_metrics?.followers_count || 0,
       total_likes: user.public_metrics?.like_count || 0,
       verified: user.verified ? 'Yes' : 'No',
+      verified_type: user.verified_type || 'N/A',
       description: user.description || 'N/A',
       region: user.location || 'N/A',
       user_id: user.id || 'N/A',
@@ -90,7 +93,7 @@ app.post('/api/x/:username', async (req, res) => {
 app.get('/api/x/:username', async (req, res) => {
   try {
     const response = await axios.get(
-      `https://api.x.com/2/users/by/username/${req.params.username}?user.fields=public_metrics,created_at,profile_image_url,location,description,verified`,
+      `https://api.x.com/2/users/by/username/${req.params.username}?user.fields=public_metrics,created_at,profile_image_url,location,description,verified,verified_type`,
       {
         headers: {
           Authorization: `Bearer ${process.env.X_BEARER_TOKEN}`,
@@ -99,6 +102,8 @@ app.get('/api/x/:username', async (req, res) => {
     );
     const user = response.data.data;
     if (!user) throw new Error('User not found');
+
+    console.log('X API Response:', JSON.stringify(response.data, null, 2)); // Log raw response for debugging
 
     res.json({
       username: user.username || req.params.username,
@@ -109,6 +114,7 @@ app.get('/api/x/:username', async (req, res) => {
       followers: user.public_metrics?.followers_count || 0,
       total_likes: user.public_metrics?.like_count || 0,
       verified: user.verified ? 'Yes' : 'No',
+      verified_type: user.verified_type || 'N/A',
       description: user.description || 'N/A',
       region: user.location || 'N/A',
       user_id: user.id || 'N/A',
