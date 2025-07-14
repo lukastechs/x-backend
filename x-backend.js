@@ -33,7 +33,7 @@ app.get('/', (req, res) => {
   res.send('X Account Age Checker API is running');
 });
 
-// X age checker endpoint
+// X age checker endpoint (POST for frontend with reCAPTCHA)
 app.post('/api/x/:username', async (req, res) => {
   try {
     // Verify reCAPTCHA
@@ -52,6 +52,38 @@ app.post('/api/x/:username', async (req, res) => {
       return res.status(400).json({ error: 'reCAPTCHA verification failed' });
     }
 
+    const response = await axios.get(`https://api.x.com/2/users/by/username/${req.params.username}`, {
+      headers: {
+        Authorization: `Bearer ${process.env.X_BEARER_TOKEN}`,
+      },
+    });
+    const user = response.data.data;
+    if (!user) throw new Error('User not found');
+
+    res.json({
+      username: user.username,
+      nickname: user.name,
+      estimated_creation_date: new Date(user.created_at).toLocaleDateString(),
+      account_age: calculateAccountAge(user.created_at),
+      age_days: calculateAgeDays(user.created_at),
+      followers: user.public_metrics.followers_count,
+      total_likes: user.public_metrics.like_count,
+      verified: user.verified ? 'Yes' : 'No',
+      description: user.description || 'N/A',
+      region: user.location || 'N/A',
+      user_id: user.id,
+      avatar: user.profile_image_url || 'https://via.placeholder.com/50',
+    });
+  } catch (error) {
+    res.status(error.response?.status || 500).json({
+      error: error.message || 'Failed to fetch X data',
+    });
+  }
+});
+
+// X age checker endpoint (GET for testing, no reCAPTCHA)
+app.get('/api/x/:username', async (req, res) => {
+  try {
     const response = await axios.get(`https://api.x.com/2/users/by/username/${req.params.username}`, {
       headers: {
         Authorization: `Bearer ${process.env.X_BEARER_TOKEN}`,
